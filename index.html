@@ -208,7 +208,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const COL = "dinamica_entries";
 
-const DASH_PASSWORD = "912345678";
+const DASH_PASSWORD = /^9\d{8}$/;
 let _dashUnlocked = false;
 let _unsubscribe = null;
 
@@ -238,7 +238,7 @@ window.goToDash = function() {
 
 window.checkPwd = function() {
   const val = document.getElementById('pwd-input').value.trim();
-  if (val === DASH_PASSWORD) {
+  if (DASH_PASSWORD.test(val)) {
     _dashUnlocked = true;
     document.getElementById('pwd-error').textContent = '';
     switchView('dash');
