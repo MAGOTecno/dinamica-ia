@@ -110,7 +110,7 @@ textarea { resize: none; line-height: 1.5; }
     <span class="step-badge">Tu equipo</span>
     <label>Nombre del grupo</label>
     <div class="group-select">
-      <div class="group-btn" onclick="selGrp('Grupo 1',this)">Grupo A</div>
+      <div class="group-btn" onclick="selGrp('Grupo 1',this)">Grupo 1</div>
       <div class="group-btn" onclick="selGrp('Grupo 2',this)">Grupo 2</div>
       <div class="group-btn" onclick="selGrp('Grupo 3',this)">Grupo 3</div>
       <div class="group-btn" onclick="selGrp('Grupo 4',this)">Grupo 4</div>
@@ -307,9 +307,15 @@ Responde SOLO JSON sin backticks ni texto extra:
       })
     });
     const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error('API error: ' + JSON.stringify(data.error || data));
+    }
+    if (!data.content || !Array.isArray(data.content)) {
+      throw new Error('Respuesta inesperada: ' + JSON.stringify(data).slice(0, 200));
+    }
     const raw = data.content.map(i => i.text||'').join('').trim();
     const m = raw.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error('Sin JSON en respuesta');
+    if (!m) throw new Error('Sin JSON en respuesta: ' + raw.slice(0,100));
     const ev = JSON.parse(m[0]);
 
     // Save to Firestore — doc ID = group name (overwrites if same group submits again)
