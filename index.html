@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Dinámica IA</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+.nav { display: flex; border-bottom: 0.5px solid #e0e0d8; background: #fff; position: sticky; top: 0; z-index: 10; }
+.nav-btn { flex: 1; padding: 13px 8px; font-size: 13px; font-weight: 600; border: none; background: transparent; cursor: pointer; color: #888; border-bottom: 2px solid transparent; }
+.nav-btn.active { color: #534ab7; border-bottom-color: #534ab7; }
+
+/* FORM */
+#view-form { background: #f5f5f0; padding: 20px 16px 40px; display: none; }
+#view-form h1 { font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+.subtitle { font-size: 13px; color: #666; margin-bottom: 20px; }
+.card { background: #fff; border-radius: 14px; padding: 18px; margin-bottom: 14px; border: 0.5px solid #e0e0d8; }
+.step-badge { display: inline-block; background: #eeedfe; color: #3c3489; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 8px; }
+label { display: block; font-size: 14px; font-weight: 500; color: #1a1a1a; margin-bottom: 6px; }
+.hint { font-size: 12px; color: #888; margin-bottom: 10px; line-height: 1.5; }
+input[type=text], input[type=password], textarea { width: 100%; border: 0.5px solid #d0d0c8; border-radius: 10px; padding: 11px 13px; font-size: 15px; font-family: inherit; background: #fafaf8; color: #1a1a1a; outline: none; -webkit-appearance: none; }
+input:focus, textarea:focus { border-color: #7f77dd; background: #fff; box-shadow: 0 0 0 3px rgba(127,119,221,0.1); }
+textarea { resize: none; line-height: 1.5; }
+.formula-tag { display: inline-block; background: #eaf3de; color: #3b6d11; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; margin: 2px; }
+.submit-btn { width: 100%; background: #534ab7; color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+.submit-btn:active { opacity: 0.85; }
+.group-select { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.group-btn { border: 1.5px solid #d0d0c8; border-radius: 10px; padding: 12px 8px; font-size: 14px; font-weight: 500; background: #fafaf8; color: #444; cursor: pointer; text-align: center; }
+.group-btn.selected { border-color: #534ab7; background: #eeedfe; color: #534ab7; }
+.char-count { font-size: 11px; color: #aaa; text-align: right; margin-top: 4px; }
+.or-div { text-align: center; font-size: 12px; color: #aaa; margin: 8px 0; }
+
+/* LOADING */
+#view-loading { display: none; text-align: center; padding: 60px 20px; background: #f5f5f0; min-height: 60vh; }
+.spinner-p { width: 38px; height: 38px; border: 3px solid #eeedfe; border-top-color: #534ab7; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
+.spinner-d { width: 32px; height: 32px; border: 2px solid rgba(255,255,255,0.1); border-top-color: #7f77dd; border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 14px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* SUCCESS */
+#view-success { display: none; text-align: center; padding: 50px 20px; background: #f5f5f0; min-height: 60vh; }
+.score-preview { background: #eeedfe; border-radius: 12px; padding: 20px; margin-top: 20px; }
+.score-num { font-size: 48px; font-weight: 700; color: #534ab7; }
+
+/* PASSWORD */
+#view-pwd { display: none; background: #0f0e1a; min-height: calc(100vh - 46px); align-items: center; justify-content: center; padding: 40px 24px; }
+.pwd-card { background: #1a1928; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px 28px; width: 100%; max-width: 340px; text-align: center; }
+.pwd-card h3 { color: #fff; font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+.pwd-card p { color: #666; font-size: 13px; margin-bottom: 20px; }
+.pwd-input { background: rgba(255,255,255,0.06) !important; border-color: rgba(255,255,255,0.12) !important; color: #fff !important; text-align: center; font-size: 20px !important; letter-spacing: 4px; }
+.pwd-input::placeholder { letter-spacing: 2px; color: #444; }
+.pwd-input:focus { border-color: #7f77dd !important; box-shadow: 0 0 0 3px rgba(127,119,221,0.15) !important; }
+.pwd-btn { width: 100%; background: #534ab7; color: #fff; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 12px; }
+.pwd-error { color: #f87171; font-size: 13px; margin-top: 10px; min-height: 20px; }
+
+/* DASHBOARD */
+#view-dash { background: #0f0e1a; color: #fff; padding: 24px 24px 40px; display: none; min-height: calc(100vh - 46px); }
+#view-dash h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; animation: pulse 1.5s ease-in-out infinite; display: inline-block; margin-left: 6px; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+.dash-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+.dash-sub { font-size: 12px; color: #666; margin-top: 3px; }
+.d-btn { background: rgba(255,255,255,0.07); border: 0.5px solid rgba(255,255,255,0.12); color: #fff; border-radius: 8px; padding: 8px 14px; font-size: 12px; cursor: pointer; }
+.d-btn:hover { background: rgba(255,255,255,0.13); }
+.d-btn.danger { color: #f87171; border-color: rgba(248,113,113,0.3); }
+.d-btn.danger:hover { background: rgba(248,113,113,0.1); }
+.stats-bar { display: flex; gap: 10px; margin-bottom: 18px; }
+.stat { background: rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px; flex: 1; }
+.stat-num { font-size: 20px; font-weight: 700; }
+.stat-lbl { font-size: 11px; color: #666; margin-top: 1px; }
+.d-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.d-card { background: #1a1928; border: 0.5px solid rgba(255,255,255,0.09); border-radius: 14px; padding: 18px; position: relative; }
+.rank-badge { position: absolute; top: 14px; left: 0; font-size: 11px; font-weight: 700; padding: 3px 12px 3px 14px; border-radius: 0 6px 6px 0; }
+.r1{background:#ffd700;color:#1a1200} .r2{background:#c0c0c0;color:#111} .r3{background:#cd7f32;color:#fff}
+.d-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.d-group { font-size: 16px; font-weight: 600; }
+.d-time { font-size: 11px; color: #555; margin-top: 2px; }
+.score-circle { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+.sh{background:rgba(74,222,128,.15);color:#4ade80;border:2px solid rgba(74,222,128,.3)}
+.sm{background:rgba(251,191,36,.15);color:#fbbf24;border:2px solid rgba(251,191,36,.3)}
+.sl{background:rgba(248,113,113,.15);color:#f87171;border:2px solid rgba(248,113,113,.3)}
+.crits { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+.crit { display:flex; align-items:center; gap:7px; }
+.c-lbl { font-size:11px; color:#666; width:52px; flex-shrink:0; }
+.bar-bg { flex:1; height:4px; background:rgba(255,255,255,0.07); border-radius:2px; overflow:hidden; }
+.bar-f { height:100%; border-radius:2px; }
+.bt{background:#7f77dd} .bp{background:#5dcaa5} .br{background:#fbbf24}
+.c-pts { font-size:11px; color:#777; width:28px; text-align:right; }
+.d-hr { border:none; border-top:0.5px solid rgba(255,255,255,0.07); margin:8px 0; }
+.sec-lbl { font-size:10px; font-weight:600; color:#444; text-transform:uppercase; letter-spacing:.8px; margin-bottom:3px; }
+.task-txt { font-size:12px; color:#bbb; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.hi-box { background:rgba(93,202,165,.08); border-left:2px solid #5dcaa5; border-radius:0 7px 7px 0; padding:6px 9px; margin-top:6px; font-size:12px; color:#9ee5cc; line-height:1.5; }
+.sug-box { background:rgba(127,119,221,.08); border-left:2px solid #7f77dd; border-radius:0 7px 7px 0; padding:6px 9px; margin-top:5px; font-size:12px; color:#c4bfff; line-height:1.5; }
+.empty { text-align:center; padding:60px 20px; color:#444; }
+.dash-loading { text-align:center; padding:60px 20px; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <button class="nav-btn" id="nav-form" onclick="switchView('form')">📱 Formulario</button>
+  <button class="nav-btn" id="nav-dash" onclick="goToDash()">📊 Dashboard</button>
+</div>
+
+<!-- FORM -->
+<div id="view-form">
+  <h1>Dinámica con IA</h1>
+  <p class="subtitle">Completa los datos de tu equipo</p>
+  <div class="card">
+    <span class="step-badge">Tu equipo</span>
+    <label>Nombre del grupo</label>
+    <div class="group-select">
+      <div class="group-btn" onclick="selGrp('Grupo 1',this)">Grupo 1</div>
+      <div class="group-btn" onclick="selGrp('Grupo 2',this)">Grupo 2</div>
+      <div class="group-btn" onclick="selGrp('Grupo 3',this)">Grupo 3</div>
+      <div class="group-btn" onclick="selGrp('Grupo 4',this)">Grupo 4</div>
+    </div>
+    <div class="or-div">— o escribe el nombre —</div>
+    <input type="text" id="f-group" placeholder="Ej: Equipo Operaciones" oninput="syncGrp(this.value)" />
+  </div>
+  <div class="card">
+    <span class="step-badge">Paso 1</span>
+    <label>Tarea rutinaria</label>
+    <p class="hint">Una tarea del día a día de tu área que consuma tiempo valioso.</p>
+    <textarea id="f-task" rows="3" placeholder="Ej: Revisar y responder correos de cotización cada mañana..." oninput="cc('f-task','c1',200)"></textarea>
+    <div class="char-count" id="c1">0 / 200</div>
+  </div>
+  <div class="card">
+    <span class="step-badge">Paso 2</span>
+    <label>Tu prompt</label>
+    <p class="hint">Usa la fórmula: <span class="formula-tag">Rol</span><span class="formula-tag">Contexto</span><span class="formula-tag">Tarea</span><span class="formula-tag">Formato</span></p>
+    <textarea id="f-prompt" rows="5" placeholder="Ej: Actúa como asistente de ventas (rol). Trabajo en un hotel y recibo 20 cotizaciones diarias (contexto). Redacta una respuesta profesional (tarea). En formato de correo con asunto y despedida (formato)." oninput="cc('f-prompt','c2',600)"></textarea>
+    <div class="char-count" id="c2">0 / 600</div>
+  </div>
+  <div class="card">
+    <span class="step-badge">Paso 3</span>
+    <label>Resultado esperado</label>
+    <p class="hint">¿Qué esperas que la IA entregue? ¿Qué problema resuelve?</p>
+    <textarea id="f-result" rows="3" placeholder="Ej: Un correo listo para enviar que ahorre 30 min diarios..." oninput="cc('f-result','c3',300)"></textarea>
+    <div class="char-count" id="c3">0 / 300</div>
+  </div>
+  <button class="submit-btn" onclick="submitForm()">Enviar respuestas</button>
+</div>
+
+<!-- LOADING FORM -->
+<div id="view-loading">
+  <div class="spinner-p"></div>
+  <p id="load-txt" style="font-size:15px;color:#666">Evaluando con IA...</p>
+</div>
+
+<!-- SUCCESS -->
+<div id="view-success">
+  <div style="font-size:52px;margin-bottom:14px">✅</div>
+  <h2 id="suc-title" style="font-size:22px;font-weight:600;color:#1a1a1a;margin-bottom:8px">¡Enviado!</h2>
+  <p style="font-size:14px;color:#666">Tu equipo ya está en el ranking.</p>
+  <div class="score-preview">
+    <div class="score-num" id="suc-score">—</div>
+    <div style="font-size:13px;color:#7f77dd;margin-top:4px">puntos obtenidos</div>
+  </div>
+  <button class="submit-btn" style="margin-top:20px;background:#eeedfe;color:#534ab7" onclick="resetForm()">Nuevo envío</button>
+</div>
+
+<!-- PASSWORD -->
+<div id="view-pwd" style="display:none">
+  <div class="pwd-card">
+    <div style="font-size:36px;margin-bottom:12px">🔒</div>
+    <h3>Acceso restringido</h3>
+    <p>Ingresa la contraseña del facilitador</p>
+    <input type="password" class="pwd-input" id="pwd-input" placeholder="••••" maxlength="20" onkeydown="if(event.key==='Enter')checkPwd()" />
+    <button class="pwd-btn" onclick="checkPwd()">Ingresar</button>
+    <div class="pwd-error" id="pwd-error"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="view-dash">
+  <div class="dash-header">
+    <div>
+      <h2>Resultados en vivo <span class="live-dot"></span></h2>
+      <div class="dash-sub" id="d-sub">Conectando...</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="d-btn danger" onclick="clearData()">Limpiar</button>
+      <button class="d-btn" onclick="lockDash()" style="color:#aaa">Cerrar sesión</button>
+    </div>
+  </div>
+  <div class="stats-bar" id="d-stats"></div>
+  <div id="d-content">
+    <div class="dash-loading"><div class="spinner-d"></div><p style="color:#555;font-size:13px">Conectando a Firebase...</p></div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5LSYpDBx0-2GSjfZAucsUtofetmLDY9Y",
+  authDomain: "encuesta-ia-icom.firebaseapp.com",
+  projectId: "encuesta-ia-icom",
+  storageBucket: "encuesta-ia-icom.firebasestorage.app",
+  messagingSenderId: "2608469199",
+  appId: "1:2608469199:web:15bfb2ed9cf1927e7a93ba"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const COL = "dinamica_entries";
+
+const DASH_PASSWORD = "facilitador2024";
+let _dashUnlocked = false;
+let _unsubscribe = null;
+
+// ── VIEWS ──
+function switchView(v) {
+  ['form','loading','success','pwd','dash'].forEach(id => {
+    const el = document.getElementById('view-' + id);
+    if (!el) return;
+    el.style.display = 'none';
+  });
+  document.getElementById('nav-form').classList.toggle('active', v === 'form');
+  document.getElementById('nav-dash').classList.toggle('active', v === 'dash' || v === 'pwd');
+  const el = document.getElementById('view-' + v);
+  if (!el) return;
+  el.style.display = (v === 'pwd') ? 'flex' : 'block';
+  if (v === 'dash') startListener();
+}
+window.switchView = switchView;
+
+window.goToDash = function() {
+  if (_dashUnlocked) { switchView('dash'); return; }
+  document.getElementById('pwd-input').value = '';
+  document.getElementById('pwd-error').textContent = '';
+  switchView('pwd');
+  setTimeout(() => document.getElementById('pwd-input').focus(), 100);
+};
+
+window.checkPwd = function() {
+  const val = document.getElementById('pwd-input').value.trim();
+  if (val === DASH_PASSWORD) {
+    _dashUnlocked = true;
+    document.getElementById('pwd-error').textContent = '';
+    switchView('dash');
+  } else {
+    document.getElementById('pwd-error').textContent = 'Contraseña incorrecta, intenta de nuevo.';
+    document.getElementById('pwd-input').value = '';
+    document.getElementById('pwd-input').focus();
+  }
+};
+
+window.lockDash = function() {
+  _dashUnlocked = false;
+  if (_unsubscribe) { _unsubscribe(); _unsubscribe = null; }
+  switchView('form');
+};
+
+// ── FORM ──
+window.selGrp = function(name, el) {
+  document.getElementById('f-group').value = name;
+  document.querySelectorAll('.group-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+};
+window.syncGrp = function(val) {
+  document.querySelectorAll('.group-btn').forEach(b => b.classList.toggle('selected', b.textContent.trim() === val));
+};
+window.cc = function(id, cid, max) {
+  document.getElementById(cid).textContent = document.getElementById(id).value.length + ' / ' + max;
+};
+
+const loadMsgs = ['Evaluando con IA...','Analizando el prompt...','Calculando puntaje...','Generando sugerencias...','Casi listo...'];
+
+window.submitForm = async function() {
+  const group  = document.getElementById('f-group').value.trim();
+  const task   = document.getElementById('f-task').value.trim();
+  const prompt = document.getElementById('f-prompt').value.trim();
+  const result = document.getElementById('f-result').value.trim();
+  if (!group||!task||!prompt||!result) { alert('Por favor completa todos los campos.'); return; }
+
+  switchView('loading');
+  let mi = 0;
+  const iv = setInterval(() => {
+    document.getElementById('load-txt').textContent = loadMsgs[++mi % loadMsgs.length];
+  }, 1800);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        messages: [{ role: 'user', content: `Eres evaluador experto en IA y prompting. Evalúa la respuesta de un equipo.
+
+GRUPO: ${group}
+TAREA: ${task}
+PROMPT (fórmula: rol+contexto+tarea+formato): ${prompt}
+RESULTADO ESPERADO: ${result}
+
+Puntúa del 0-100:
+1. TAREA (0-33): ¿es rutinaria, real, automatizable?
+2. PROMPT (0-34): ¿tiene los 4 elementos de la fórmula bien desarrollados?
+3. RESULTADO (0-33): ¿es coherente y realista?
+
+Responde SOLO JSON sin backticks ni texto extra:
+{"score_total":0,"score_task":0,"score_prompt":0,"score_result":0,"feedback_task":"","feedback_prompt":"","feedback_result":"","suggestion":"","highlight":""}` }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(i => i.text||'').join('').trim();
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('Sin JSON en respuesta');
+    const ev = JSON.parse(m[0]);
+
+    // Save to Firestore — doc ID = group name (overwrites if same group submits again)
+    const docId = group.replace(/[^a-zA-Z0-9]/g, '_');
+    await setDoc(doc(db, COL, docId), {
+      group, task, prompt, result,
+      evaluation: ev,
+      timestamp: Date.now()
+    });
+
+    clearInterval(iv);
+    switchView('success');
+    document.getElementById('suc-score').textContent = ev.score_total;
+    document.getElementById('suc-title').textContent = '¡' + group + ' enviado!';
+
+  } catch(err) {
+    clearInterval(iv);
+    switchView('form');
+    alert('Error: ' + err.message + '\nIntenta de nuevo.');
+  }
+};
+
+window.resetForm = function() {
+  ['f-group','f-task','f-prompt','f-result'].forEach(id => document.getElementById(id).value = '');
+  ['c1','c2','c3'].forEach((id,i) => document.getElementById(id).textContent = '0 / '+[200,600,300][i]);
+  document.querySelectorAll('.group-btn').forEach(b => b.classList.remove('selected'));
+  switchView('form');
+};
+
+// ── DASHBOARD / FIRESTORE LISTENER ──
+function startListener() {
+  if (_unsubscribe) return; // already listening
+  _unsubscribe = onSnapshot(collection(db, COL), snapshot => {
+    const list = [];
+    snapshot.forEach(d => list.push(d.data()));
+    renderDash(list);
+  }, err => {
+    document.getElementById('d-content').innerHTML = `<div class="empty"><p style="color:#f87171">Error de conexión: ${err.message}</p></div>`;
+  });
+}
+
+function timeAgo(ts) {
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s<60) return 'hace '+s+'s';
+  if (s<3600) return 'hace '+Math.floor(s/60)+'min';
+  return 'hace '+Math.floor(s/3600)+'h';
+}
+function sc(s){ return s>=70?'sh':s>=40?'sm':'sl'; }
+function pw(v,m){ return Math.round(v/m*100)+'%'; }
+
+function renderDash(data) {
+  const list = [...data].sort((a,b) => b.evaluation.score_total - a.evaluation.score_total);
+  const avg = list.length ? Math.round(list.reduce((s,e)=>s+e.evaluation.score_total,0)/list.length) : 0;
+
+  document.getElementById('d-stats').innerHTML = list.length ? `
+    <div class="stat"><div class="stat-num">${list.length}</div><div class="stat-lbl">equipos</div></div>
+    <div class="stat"><div class="stat-num">${avg}</div><div class="stat-lbl">promedio</div></div>
+    <div class="stat"><div class="stat-num" style="color:#ffd700">${list[0].group}</div><div class="stat-lbl">líder</div></div>` : '';
+
+  if (!list.length) {
+    document.getElementById('d-content').innerHTML = `<div class="empty"><div style="font-size:40px;margin-bottom:12px">📱</div><p style="color:#888;font-size:16px;margin-bottom:6px">Esperando respuestas...</p><p style="color:#444;font-size:13px">Los equipos completan el formulario desde sus celulares</p></div>`;
+    document.getElementById('d-sub').textContent = 'Escuchando en tiempo real...';
+    return;
+  }
+
+  const rc=['r1','r2','r3'], rl=['#1','#2','#3'];
+  document.getElementById('d-content').innerHTML = '<div class="d-grid">' + list.map((e,i) => {
+    const ev = e.evaluation;
+    const badge = i<3 ? `<div class="rank-badge ${rc[i]}">${rl[i]}</div>` : '';
+    return `<div class="d-card" style="padding-left:${i<3?'22':'18'}px">
+      ${badge}
+      <div class="d-card-top">
+        <div><div class="d-group">${e.group}</div><div class="d-time">${timeAgo(e.timestamp)}</div></div>
+        <div class="score-circle ${sc(ev.score_total)}">${ev.score_total}</div>
+      </div>
+      <div class="crits">
+        <div class="crit"><span class="c-lbl">Tarea</span><div class="bar-bg"><div class="bar-f bt" style="width:${pw(ev.score_task,33)}"></div></div><span class="c-pts">${ev.score_task}/33</span></div>
+        <div class="crit"><span class="c-lbl">Prompt</span><div class="bar-bg"><div class="bar-f bp" style="width:${pw(ev.score_prompt,34)}"></div></div><span class="c-pts">${ev.score_prompt}/34</span></div>
+        <div class="crit"><span class="c-lbl">Resultado</span><div class="bar-bg"><div class="bar-f br" style="width:${pw(ev.score_result,33)}"></div></div><span class="c-pts">${ev.score_result}/33</span></div>
+      </div>
+      <div class="d-hr"></div>
+      <div class="sec-lbl">Tarea elegida</div>
+      <div class="task-txt">${e.task}</div>
+      <div class="hi-box">⭐ ${ev.highlight}</div>
+      <div class="sug-box">💡 ${ev.suggestion}</div>
+    </div>`;
+  }).join('') + '</div>';
+
+  document.getElementById('d-sub').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}) + ' · en tiempo real';
+}
+
+window.clearData = async function() {
+  if (!confirm('¿Limpiar todos los resultados de Firebase?')) return;
+  const snap = await getDocs(collection(db, COL));
+  const deletes = snap.docs.map(d => deleteDoc(doc(db, COL, d.id)));
+  await Promise.all(deletes);
+};
+
+// Start
+switchView('form');
+</script>
+</body>
+</html>
